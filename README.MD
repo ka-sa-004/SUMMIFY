@@ -41,4 +41,4 @@ Model files are not included in this repository due to size limitations. You can
 
 ## 👨‍💻 Author
 
-Aradhy Shrivastava
+Kashish sarwa
