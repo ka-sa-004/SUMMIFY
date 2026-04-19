@@ -1,0 +1,7 @@
+saved_summary_model/
+*.safetensors
+__pycache__/
+*.pyc
+.env
+venv/
+*.bin
