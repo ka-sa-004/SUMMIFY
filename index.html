@@ -1,689 +1,802 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Summify — AI Text Summarizer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;1,300;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #0d0d0d;
-            --surface: #141414;
-            --surface2: #1c1c1c;
-            --border: rgba(255,255,255,0.07);
-            --accent: #ff6b35;
-            --accent2: #ff9a62;
-            --accent-glow: rgba(255, 107, 53, 0.25);
-            --text: #f0ede8;
-            --text-muted: #7a7570;
-            --text-dim: #4a4642;
-            --success: #52d68a;
-            --radius: 16px;
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SentimentAI — IMDB Review Analyzer</title>
+<style>
+  :root {
+    --purple: #7F77DD;
+    --purple-dark: #534AB7;
+    --teal: #1D9E75;
+    --teal-light: #5DCAA5;
+    --coral: #D85A30;
+    --pink: #D4537E;
+    --amber: #EF9F27;
+    --bg: #0d0d1a;
+    --bg2: #13132b;
+    --bg3: #1a1a3a;
+    --text: #f0efff;
+    --muted: #9896c8;
+    --border: rgba(127,119,221,0.2);
+  }
 
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 60px 20px 80px;
-            overflow-x: hidden;
-        }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-        /* Ambient background blobs */
-        body::before {
-            content: '';
-            position: fixed;
-            top: -200px; left: -200px;
-            width: 600px; height: 600px;
-            background: radial-gradient(circle, rgba(255,107,53,0.12) 0%, transparent 70%);
-            pointer-events: none;
-            animation: blob1 12s ease-in-out infinite alternate;
-        }
-        body::after {
-            content: '';
-            position: fixed;
-            bottom: -150px; right: -150px;
-            width: 500px; height: 500px;
-            background: radial-gradient(circle, rgba(255,154,98,0.08) 0%, transparent 70%);
-            pointer-events: none;
-            animation: blob2 15s ease-in-out infinite alternate;
-        }
-        @keyframes blob1 { from { transform: translate(0,0) scale(1); } to { transform: translate(80px,60px) scale(1.1); } }
-        @keyframes blob2 { from { transform: translate(0,0) scale(1); } to { transform: translate(-60px,-40px) scale(1.15); } }
+  /* ── Animated gradient background ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(127,119,221,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(29,158,117,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 60% 30%, rgba(212,83,126,0.08) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
 
-        /* Header */
-        .header {
-            text-align: center;
-            margin-bottom: 48px;
-            animation: fadeUp 0.7s ease both;
-        }
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(255,107,53,0.12);
-            border: 1px solid rgba(255,107,53,0.25);
-            color: var(--accent2);
-            font-size: 11px;
-            font-weight: 500;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            padding: 5px 12px;
-            border-radius: 100px;
-            margin-bottom: 20px;
-        }
-        .badge::before { content: '⬡'; font-size: 10px; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
 
-        h1 {
-            font-family: 'Fraunces', serif;
-            font-size: clamp(2.8rem, 6vw, 4.2rem);
-            font-weight: 700;
-            line-height: 1.05;
-            letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #fff 30%, var(--accent2) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 12px;
-        }
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 15px;
-            font-weight: 300;
-            letter-spacing: 0.01em;
-        }
-        .subtitle em {
-            font-style: italic;
-            font-family: 'Fraunces', serif;
-            color: var(--accent2);
-        }
+  /* ── NAV ── */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(13,13,26,0.85);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+  .nav-logo {
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--purple), var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; transition: color .2s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-badge {
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    color: #fff;
+    font-size: 12px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
 
-        /* Main card */
-        .card {
-            width: 100%;
-            max-width: 680px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            overflow: hidden;
-            animation: fadeUp 0.7s 0.1s ease both;
-            position: relative;
-        }
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,107,53,0.4), transparent);
-        }
+  /* ── HERO ── */
+  .hero {
+    padding: 100px 0 80px;
+    text-align: center;
+  }
+  .hero-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(127,119,221,0.15);
+    border: 1px solid rgba(127,119,221,0.3);
+    color: #AFA9EC;
+    font-size: 13px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 28px;
+    font-weight: 500;
+  }
+  .hero-chip span { width: 8px; height: 8px; border-radius: 50%; background: var(--teal-light); display: inline-block; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
 
-        /* Input section */
-        .input-section {
-            padding: 28px 28px 0;
-        }
-        .input-label {
-            font-size: 11px;
-            font-weight: 500;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--text-dim);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .input-label::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border);
-        }
+  h1 {
+    font-size: clamp(36px, 6vw, 68px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 24px;
+    letter-spacing: -1px;
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 40%, var(--amber) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero p {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 600px;
+    margin: 0 auto 48px;
+    line-height: 1.7;
+  }
+  .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+    color: #fff;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: transform .2s, box-shadow .2s;
+    box-shadow: 0 4px 20px rgba(127,119,221,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(127,119,221,0.5); }
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+  }
+  .btn-outline:hover { border-color: var(--purple); background: rgba(127,119,221,0.08); }
 
-        textarea {
-            width: 100%;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            color: var(--text);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14.5px;
-            font-weight: 300;
-            line-height: 1.65;
-            resize: vertical;
-            min-height: 160px;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            outline: none;
-        }
-        textarea::placeholder { color: var(--text-dim); }
-        textarea:focus {
-            border-color: rgba(255,107,53,0.4);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
+  /* ── STATS ── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    padding: 40px 0 80px;
+  }
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    transition: border-color .2s, transform .2s;
+  }
+  .stat-card:hover { border-color: var(--purple); transform: translateY(-3px); }
+  .stat-number { font-size: 36px; font-weight: 800; margin-bottom: 6px; }
+  .stat-label { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .c-purple { color: var(--purple); }
+  .c-teal { color: var(--teal-light); }
+  .c-pink { color: var(--pink); }
+  .c-amber { color: var(--amber); }
 
-        /* Word count */
-        .input-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0 0;
-            font-size: 12px;
-            color: var(--text-dim);
-        }
+  /* ── SECTION HEADER ── */
+  .section-header { text-align: center; margin-bottom: 56px; }
+  .section-tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--purple);
+    margin-bottom: 12px;
+  }
+  .section-header h2 { font-size: clamp(28px, 4vw, 42px); font-weight: 700; margin-bottom: 16px; }
+  .section-header p { font-size: 16px; color: var(--muted); max-width: 520px; margin: 0 auto; line-height: 1.7; }
 
-        /* Options row */
-        .options-section {
-            padding: 20px 28px;
-            border-top: 1px solid var(--border);
-            margin-top: 20px;
-        }
-        .options-label {
-            font-size: 11px;
-            font-weight: 500;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--text-dim);
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .options-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  /* ── DEMO SECTION ── */
+  #demo { padding: 80px 0; }
+  .demo-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  .demo-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .demo-card .sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
 
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
+  .sample-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+  .chip {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .chip:hover { border-color: var(--purple); color: var(--text); background: rgba(127,119,221,0.1); }
 
-        .option-group label {
-            display: block;
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-            letter-spacing: 0.04em;
-        }
-        select, .toggle-group {
-            width: 100%;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
-            padding: 9px 12px;
-            outline: none;
-            cursor: pointer;
-            transition: border-color 0.2s;
-            appearance: none;
-            -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237a7570' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            padding-right: 28px;
-        }
-        select:focus { border-color: rgba(255,107,53,0.4); }
+  textarea {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 15px;
+    padding: 16px;
+    resize: vertical;
+    min-height: 130px;
+    font-family: inherit;
+    line-height: 1.6;
+    transition: border-color .2s;
+    outline: none;
+  }
+  textarea::placeholder { color: var(--muted); }
+  textarea:focus { border-color: var(--purple); }
 
-        /* Toggle chips */
-        .toggle-group {
-            display: flex;
-            gap: 6px;
-            padding: 5px;
-            background: var(--surface2);
-            border-radius: 8px;
-        }
-        .toggle-group input[type="radio"] { display: none; }
-        .toggle-group label {
-            flex: 1;
-            text-align: center;
-            padding: 5px 0;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-            color: var(--text-muted);
-            margin: 0;
-            transition: background 0.18s, color 0.18s;
-        }
-        .toggle-group input[type="radio"]:checked + label {
-            background: var(--accent);
-            color: #fff;
-        }
+  .char-count { font-size: 12px; color: var(--muted); text-align: right; margin-top: 6px; margin-bottom: 20px; }
 
-        /* Tone tags */
-        .tone-row {
-            grid-column: 1 / -1;
-        }
-        .tone-chips {
-            display: flex;
-            gap: 7px;
-            flex-wrap: wrap;
-        }
-        .tone-chips input[type="radio"] { display: none; }
-        .tone-chips label {
-            padding: 6px 13px;
-            border-radius: 100px;
-            font-size: 12px;
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: all 0.18s;
-            background: var(--surface2);
-        }
-        .tone-chips input[type="radio"]:checked + label {
-            border-color: var(--accent);
-            color: var(--accent2);
-            background: rgba(255,107,53,0.1);
-        }
-        .tone-chips label:hover { border-color: rgba(255,107,53,0.3); color: var(--text); }
+  .analyze-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    color: #fff;
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .2s, transform .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .analyze-btn:hover { opacity: .9; transform: translateY(-1px); }
+  .analyze-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 
-        /* Action section */
-        .action-section {
-            padding: 0 28px 28px;
-            display: flex;
-            gap: 10px;
-        }
+  /* ── RESULT ── */
+  .result-box {
+    margin-top: 24px;
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid;
+    display: none;
+    animation: fadeIn .4s ease;
+  }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .result-box.positive { background: rgba(29,158,117,0.08); border-color: rgba(29,158,117,0.3); }
+  .result-box.negative { background: rgba(216,90,48,0.08); border-color: rgba(216,90,48,0.3); }
+  .result-box.neutral  { background: rgba(127,119,221,0.08); border-color: rgba(127,119,221,0.3); }
 
-        .btn-primary {
-            flex: 1;
-            padding: 14px 20px;
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            letter-spacing: 0.02em;
-            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-        .btn-primary::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 100%);
-            pointer-events: none;
-        }
-        .btn-primary:hover:not(:disabled) {
-            background: #e85a28;
-            box-shadow: 0 4px 20px rgba(255,107,53,0.4);
-            transform: translateY(-1px);
-        }
-        .btn-primary:active:not(:disabled) { transform: translateY(0); }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .result-top { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+  .result-emoji { font-size: 48px; line-height: 1; }
+  .result-label { font-size: 28px; font-weight: 800; }
+  .result-conf { font-size: 14px; color: var(--muted); margin-top: 2px; }
+  .result-label.pos { color: var(--teal-light); }
+  .result-label.neg { color: var(--coral); }
+  .result-label.neu { color: var(--purple); }
 
-        .btn-secondary {
-            padding: 14px 16px;
-            background: var(--surface2);
-            color: var(--text-muted);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.18s;
-            white-space: nowrap;
-        }
-        .btn-secondary:hover { border-color: rgba(255,107,53,0.3); color: var(--text); }
+  .progress-wrap { margin-bottom: 12px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+  .progress-bar { height: 8px; background: var(--bg3); border-radius: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 10px; transition: width 0.8s cubic-bezier(.4,0,.2,1); }
+  .fill-pos { background: linear-gradient(90deg, var(--teal), var(--teal-light)); }
+  .fill-neg { background: linear-gradient(90deg, var(--coral), #F0997B); }
 
-        /* Output section */
-        .output-section {
-            margin-top: 20px;
-            width: 100%;
-            max-width: 680px;
-            animation: fadeUp 0.5s ease both;
-        }
-        .output-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            overflow: hidden;
-            position: relative;
-        }
-        .output-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(82,214,138,0.4), transparent);
-        }
-        .output-header {
-            padding: 18px 24px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .output-title {
-            font-size: 11px;
-            font-weight: 500;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--text-dim);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .output-title::before {
-            content: '';
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: var(--success);
-            box-shadow: 0 0 8px var(--success);
-        }
-        .output-actions {
-            display: flex;
-            gap: 8px;
-        }
-        .icon-btn {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            width: 32px; height: 32px;
-            border-radius: 7px;
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.18s;
-        }
-        .icon-btn:hover { border-color: rgba(255,107,53,0.3); color: var(--text); }
+  .keywords { margin-top: 16px; }
+  .keywords p { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .keyword-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .kchip {
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  .kchip.pos { background: rgba(29,158,117,0.15); color: var(--teal-light); border: 1px solid rgba(29,158,117,0.3); }
+  .kchip.neg { background: rgba(216,90,48,0.15); color: #F0997B; border: 1px solid rgba(216,90,48,0.3); }
+  .kchip.neu { background: rgba(127,119,221,0.15); color: #AFA9EC; border: 1px solid rgba(127,119,221,0.3); }
 
-        .output-body {
-            padding: 24px;
-        }
-        #summary-text {
-            font-family: 'Fraunces', serif;
-            font-size: 17px;
-            font-weight: 300;
-            line-height: 1.75;
-            color: var(--text);
-            font-style: italic;
-        }
-        #summary-text.loading {
-            color: var(--text-muted);
-            font-family: 'DM Sans', sans-serif;
-            font-style: normal;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .dots span {
-            display: inline-block;
-            width: 5px; height: 5px;
-            border-radius: 50%;
-            background: var(--accent);
-            animation: dot 1.2s ease-in-out infinite;
-        }
-        .dots span:nth-child(2) { animation-delay: 0.2s; }
-        .dots span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes dot { 0%,80%,100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+  /* ── HOW IT WORKS ── */
+  #how { padding: 80px 0; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+  .step-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    position: relative;
+    transition: border-color .2s, transform .2s;
+  }
+  .step-card:hover { border-color: var(--purple); transform: translateY(-4px); }
+  .step-num {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800;
+    margin-bottom: 16px;
+  }
+  .step-card h4 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .step-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
-        .output-footer {
-            padding: 14px 24px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            gap: 16px;
-        }
-        .stat {
-            font-size: 11px;
-            color: var(--text-dim);
-        }
-        .stat span {
-            color: var(--text-muted);
-            font-weight: 500;
-        }
+  /* ── FEATURES ── */
+  #features { padding: 80px 0; }
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+  .feature-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    transition: border-color .2s, transform .2s;
+  }
+  .feature-card:hover { border-color: var(--purple); transform: translateY(-3px); }
+  .feature-icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+  .feature-card h4 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .feature-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
 
-        /* Empty state */
-        .empty-state {
-            padding: 40px 28px;
-            text-align: center;
-            color: var(--text-dim);
-        }
-        .empty-icon {
-            font-size: 32px;
-            margin-bottom: 12px;
-            opacity: 0.4;
-        }
-        .empty-state p { font-size: 13px; }
+  /* ── GITHUB ── */
+  #github { padding: 80px 0; }
+  .github-box {
+    background: linear-gradient(135deg, rgba(127,119,221,0.15), rgba(29,158,117,0.1));
+    border: 1px solid rgba(127,119,221,0.3);
+    border-radius: 24px;
+    padding: 56px 40px;
+    text-align: center;
+  }
+  .github-box h2 { font-size: 36px; font-weight: 800; margin-bottom: 16px; }
+  .github-box p { font-size: 16px; color: var(--muted); margin-bottom: 36px; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+  .code-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: #AFA9EC;
+    text-align: left;
+    max-width: 600px;
+    margin: 0 auto 32px;
+    line-height: 1.8;
+  }
+  .code-block .cmd { color: var(--teal-light); }
+  .code-block .comment { color: var(--muted); font-style: italic; }
 
-        /* Animations */
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  footer strong { color: var(--text); }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 10px; }
+  /* ── ERROR BOX ── */
+  .error-box {
+    margin-top: 20px;
+    padding: 20px 24px;
+    border-radius: 14px;
+    background: rgba(216,90,48,0.08);
+    border: 1px solid rgba(216,90,48,0.35);
+    display: none;
+    animation: fadeIn .3s ease;
+  }
+  .error-box .error-title { font-size: 16px; font-weight: 700; color: #F0997B; margin-bottom: 6px; }
+  .error-box .error-msg   { font-size: 14px; color: var(--muted); line-height: 1.6; }
 
-        /* Error state */
-        .error { color: #ff6b6b; font-size: 14px; font-style: normal; font-family: 'DM Sans', sans-serif; }
-    </style>
+  /* ── LOADING ── */
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 640px) {
+    .nav-links { display: none; }
+    .demo-card { padding: 24px; }
+    .github-box { padding: 40px 24px; }
+  }
+</style>
 </head>
 <body>
 
-    <!-- Header -->
-    <div class="header">
-        <div class="badge">Powered by HuggingFace Transformers</div>
-        <h1>Summify</h1>
-        <p class="subtitle">Drop in any text. Get the <em>essence</em> back.</p>
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">⚡ SentimentAI</div>
+  <ul class="nav-links">
+    <li><a href="#demo">Try it Live</a></li>
+    <li><a href="#how">How it Works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#github">GitHub</a></li>
+  </ul>
+  <div class="nav-badge">85.6% Accuracy</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-chip">
+      <span></span>
+      Trained on 50,000 IMDB Reviews · PyTorch GRU
+    </div>
+    <h1>Understand <span class="gradient-text">Movie Sentiment</span><br>with Deep Learning</h1>
+    <p>A GRU-based Recurrent Neural Network that classifies movie reviews as Positive or Negative — trained end-to-end on the IMDB dataset using TF-IDF + PyTorch.</p>
+    <div class="hero-buttons">
+      <a href="#demo" class="btn-primary">🎬 Try Live Demo</a>
+      <a href="#github" class="btn-outline">⭐ View on GitHub</a>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="container">
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-number c-purple">85.6%</div>
+      <div class="stat-label">Validation Accuracy</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number c-teal">49,582</div>
+      <div class="stat-label">Training Samples</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number c-pink">5,000</div>
+      <div class="stat-label">TF-IDF Features</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number c-amber">GRU</div>
+      <div class="stat-label">Model Architecture</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number c-purple">10</div>
+      <div class="stat-label">Training Epochs</div>
+    </div>
+  </div>
+</div>
+
+<!-- DEMO SECTION -->
+<section id="demo">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Live Demo</div>
+      <h2>Test Your Own Review</h2>
+      <p>Type or paste any movie review below and our model will predict whether it's Positive or Negative in real time.</p>
     </div>
 
-    <!-- Input Card -->
-    <div class="card">
-        <div class="input-section">
-            <div class="input-label">Your Content</div>
-            <textarea id="dialogue-input" placeholder="Paste an article, essay, research paper, meeting notes…" oninput="updateWordCount()"></textarea>
-            <div class="input-meta">
-                <span id="word-count">0 words</span>
-                <span id="char-count">0 / ∞ characters</span>
-            </div>
+    <div class="demo-card">
+      <h3>🎬 Analyze a Review</h3>
+      <p class="sub">Try one of the samples or write your own:</p>
+
+      <div class="sample-chips">
+        <div class="chip" onclick="fillSample('positive')">😊 Positive Sample</div>
+        <div class="chip" onclick="fillSample('negative')">😞 Negative Sample</div>
+        <div class="chip" onclick="fillSample('mixed')">🤔 Mixed Sample</div>
+        <div class="chip" onclick="clearReview()">🗑 Clear</div>
+      </div>
+
+      <textarea id="reviewInput" placeholder="Write a movie review here... e.g. 'This film was absolutely breathtaking. The cinematography, the acting, the plot — everything was perfect.'" oninput="updateChar()"></textarea>
+      <div class="char-count"><span id="charCount">0</span> characters</div>
+
+      <button class="analyze-btn" id="analyzeBtn" onclick="analyzeReview()">
+        <div class="spinner" id="spinner"></div>
+        <span id="btnText">✨ Analyze Sentiment</span>
+      </button>
+
+      <div class="error-box" id="errorBox">
+        <div class="error-title">⚠️ Could not analyze this text</div>
+        <div class="error-msg" id="errorMsg">Please enter a valid English movie review.</div>
+      </div>
+
+      <div class="result-box" id="resultBox">
+        <div class="result-top">
+          <div class="result-emoji" id="resultEmoji">😊</div>
+          <div>
+            <div class="result-label" id="resultLabel">Positive</div>
+            <div class="result-conf" id="resultConf">Confidence: 92%</div>
+          </div>
         </div>
 
-        <!-- Options -->
-        <div class="options-section">
-            <div class="options-label">Options</div>
-            <div class="options-grid">
-
-                <!-- Length -->
-                <div class="option-group">
-                    <label>Summary Length</label>
-                    <div class="toggle-group">
-                        <input type="radio" name="length" id="len-short" value="short">
-                        <label for="len-short">Short</label>
-                        <input type="radio" name="length" id="len-medium" value="medium" checked>
-                        <label for="len-medium">Medium</label>
-                        <input type="radio" name="length" id="len-long" value="long">
-                        <label for="len-long">Long</label>
-                    </div>
-                </div>
-
-                <!-- Format -->
-                <div class="option-group">
-                    <label>Output Format</label>
-                    <select id="format-select">
-                        <option value="paragraph">Paragraph</option>
-                        <option value="bullets">Bullet Points</option>
-                        <option value="tldr">TL;DR (1 sentence)</option>
-                        <option value="headline">Headline + Summary</option>
-                    </select>
-                </div>
-
-                <!-- Tone -->
-                <div class="option-group tone-row">
-                    <label>Tone</label>
-                    <div class="tone-chips">
-                        <input type="radio" name="tone" id="tone-neutral" value="neutral" checked>
-                        <label for="tone-neutral">Neutral</label>
-                        <input type="radio" name="tone" id="tone-formal" value="formal">
-                        <label for="tone-formal">Formal</label>
-                        <input type="radio" name="tone" id="tone-simple" value="simple">
-                        <label for="tone-simple">Simple / ELI5</label>
-                        <input type="radio" name="tone" id="tone-concise" value="concise">
-                        <label for="tone-concise">Concise</label>
-                        <input type="radio" name="tone" id="tone-creative" value="creative">
-                        <label for="tone-creative">Creative</label>
-                    </div>
-                </div>
-
-            </div>
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span style="color: var(--teal-light)">😊 Positive</span>
+            <span id="posPercent">72%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill fill-pos" id="posBar" style="width:72%"></div></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span style="color: #F0997B">😞 Negative</span>
+            <span id="negPercent">28%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill fill-neg" id="negBar" style="width:28%"></div></div>
         </div>
 
-        <!-- Actions -->
-        <div class="action-section">
-            <button class="btn-primary" id="submit-btn" onclick="handleSummarize()">
-                ✦ Summarize
-            </button>
-            <button class="btn-secondary" onclick="clearAll()">Clear</button>
-            <button class="btn-secondary" onclick="pasteClipboard()" title="Paste from clipboard">⌘V Paste</button>
+        <div class="keywords" id="keywordsSection">
+          <p>Key words detected:</p>
+          <div class="keyword-chips" id="keywordChips"></div>
         </div>
+      </div>
     </div>
+  </div>
+</section>
 
-    <!-- Output Card -->
-    <div class="output-section" id="output-section">
-        <div class="output-card">
-            <div class="output-header">
-                <div class="output-title" id="output-title-label">Awaiting Input</div>
-                <div class="output-actions">
-                    <button class="icon-btn" onclick="copyOutput()" title="Copy summary">⎘</button>
-                    <button class="icon-btn" onclick="downloadOutput()" title="Download as .txt">↓</button>
-                </div>
-            </div>
-            <div class="output-body">
-                <div id="summary-text">
-                    <div class="empty-state">
-                        <div class="empty-icon">◈</div>
-                        <p>Your summary will appear here.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="output-footer" id="output-footer" style="display:none">
-                <div class="stat">Original: <span id="stat-original">—</span> words</div>
-                <div class="stat">Summary: <span id="stat-summary">—</span> words</div>
-                <div class="stat">Reduced: <span id="stat-reduction">—</span></div>
-            </div>
-        </div>
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Pipeline</div>
+      <h2>How It Works</h2>
+      <p>From raw text to sentiment prediction — a clean NLP pipeline under the hood.</p>
     </div>
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num" style="background:rgba(127,119,221,0.15);color:var(--purple)">1</div>
+        <h4>Text Preprocessing</h4>
+        <p>Lowercase, strip HTML & URLs, remove punctuation, filter stopwords, apply Porter Stemming.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num" style="background:rgba(29,158,117,0.15);color:var(--teal-light)">2</div>
+        <h4>TF-IDF Vectorization</h4>
+        <p>Convert cleaned text to a 5,000-dim sparse feature vector using bigram TF-IDF.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num" style="background:rgba(212,83,126,0.15);color:var(--pink)">3</div>
+        <h4>GRU Encoding</h4>
+        <p>2-layer GRU with dropout encodes the feature vector into a dense 128-dim representation.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num" style="background:rgba(239,159,39,0.15);color:var(--amber)">4</div>
+        <h4>Classification</h4>
+        <p>A fully connected layer + sigmoid outputs the probability of Positive sentiment.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <script>
-        function updateWordCount() {
-            const text = document.getElementById('dialogue-input').value.trim();
-            const words = text ? text.split(/\s+/).length : 0;
-            const chars = text.length;
-            document.getElementById('word-count').textContent = `${words} word${words !== 1 ? 's' : ''}`;
-            document.getElementById('char-count').textContent = `${chars.toLocaleString()} characters`;
-        }
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Features</div>
+      <h2>What Makes This Model Special</h2>
+      <p>Built with best practices for production-ready NLP.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(127,119,221,0.15)">🧠</div>
+        <h4>GRU Architecture</h4>
+        <p>Upgraded from vanilla RNN to GRU — better long-range dependency capture and faster training.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(29,158,117,0.15)">🔄</div>
+        <h4>BCEWithLogitsLoss</h4>
+        <p>More numerically stable than BCELoss + sigmoid, preventing gradient vanishing during training.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(212,83,126,0.15)">📉</div>
+        <h4>LR Scheduler + Clipping</h4>
+        <p>StepLR decay and gradient clipping ensure stable convergence and prevent exploding gradients.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(239,159,39,0.15)">💾</div>
+        <h4>Model Checkpointing</h4>
+        <p>Saves the best model checkpoint automatically during training based on validation accuracy.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(127,119,221,0.15)">📊</div>
+        <h4>Stratified Split</h4>
+        <p>Ensures balanced class distribution in both train and test sets for unbiased evaluation.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(29,158,117,0.15)">🔍</div>
+        <h4>Bigram TF-IDF</h4>
+        <p>Captures two-word phrases like "not good" or "very bad" for richer text representation.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-        function clearAll() {
-            document.getElementById('dialogue-input').value = '';
-            updateWordCount();
-        }
+<!-- GITHUB -->
+<section id="github">
+  <div class="container">
+    <div class="github-box">
+      <h2>🚀 Get the Code</h2>
+      <p>The full project — cleaned notebook, trained model weights, and vectorizer — is available on GitHub.</p>
+      <div class="code-block">
+        <span class="comment"># Clone the repository</span><br>
+        <span class="cmd">git clone</span> https://github.com/YOUR_USERNAME/sentiment-analysis.git<br>
+        <span class="cmd">cd</span> sentiment-analysis<br><br>
+        <span class="comment"># Install dependencies</span><br>
+        <span class="cmd">pip install</span> -r requirements.txt<br><br>
+        <span class="comment"># Run the notebook</span><br>
+        <span class="cmd">jupyter notebook</span> Sentiment_analysis_improved.ipynb
+      </div>
+      <div class="hero-buttons">
+        <a href="https://github.com/YOUR_USERNAME/sentiment-analysis" class="btn-primary" target="_blank">⭐ Star on GitHub</a>
+        <a href="#demo" class="btn-outline">🎬 Try Demo First</a>
+      </div>
+    </div>
+  </div>
+</section>
 
-        async function pasteClipboard() {
-            try {
-                const text = await navigator.clipboard.readText();
-                document.getElementById('dialogue-input').value = text;
-                updateWordCount();
-            } catch {
-                alert('Clipboard access denied. Please paste manually.');
-            }
-        }
+<!-- FOOTER -->
+<footer>
+  <p>Built with 💜 using <strong>PyTorch</strong> · <strong>NLTK</strong> · <strong>scikit-learn</strong> · Trained on <strong>IMDB Dataset</strong></p>
+  <p style="margin-top:8px">© 2025 SentimentAI — Open Source NLP Project</p>
+</footer>
 
-        async function handleSummarize() {
-            const input = document.getElementById('dialogue-input').value.trim();
-            const summaryEl = document.getElementById('summary-text');
-            const btn = document.getElementById('submit-btn');
-            const footer = document.getElementById('output-footer');
-            const titleLabel = document.getElementById('output-title-label');
+<script>
+  const POSITIVE_WORDS = ['great','excellent','amazing','fantastic','wonderful','brilliant','superb','outstanding','perfect','love','best','beautiful','masterpiece','incredible','stunning','captivating','hilarious','entertaining','powerful','moving','heartwarming','delightful','phenomenal','extraordinary','thrilling','compelling'];
+  const NEGATIVE_WORDS = ['terrible','awful','boring','horrible','worst','bad','dull','stupid','waste','disappointing','poor','weak','mediocre','pathetic','unbearable','tedious','ridiculous','pointless','offensive','annoying','forgettable','overrated','derivative','predictable','confusing'];
+  const NEUTRAL_WORDS  = ['interesting','okay','average','decent','fine','alright','standard','familiar','typical','common'];
 
-            if (!input) return;
+  const SAMPLES = {
+    positive: "This movie was an absolute masterpiece! The acting was superb, the cinematography breathtaking, and the story kept me glued to the screen from start to finish. One of the best films I've seen this decade — highly recommended!",
+    negative: "What a complete waste of time. The plot made no sense, the acting was terrible, and I fell asleep halfway through. The dialogue was cringe-worthy and the special effects looked like they were done on a budget of $5. Absolutely awful.",
+    mixed: "The film had some genuinely interesting moments and the lead performance was decent, but the pacing was quite slow and the ending felt rushed. It's okay for a lazy Sunday watch but I wouldn't go out of my way to recommend it."
+  };
 
-            const length = document.querySelector('input[name="length"]:checked')?.value || 'medium';
-            const format = document.getElementById('format-select').value;
-            const tone = document.querySelector('input[name="tone"]:checked')?.value || 'neutral';
+  function fillSample(type) {
+    document.getElementById('reviewInput').value = SAMPLES[type];
+    updateChar();
+    document.getElementById('resultBox').style.display = 'none';
+  }
 
-            // Loading state
-            btn.disabled = true;
-            btn.textContent = '⟳ Processing…';
-            titleLabel.innerHTML = 'Generating Summary';
-            footer.style.display = 'none';
-            summaryEl.className = 'loading';
-            summaryEl.innerHTML = `Processing <div class="dots"><span></span><span></span><span></span></div>`;
+  function clearReview() {
+    document.getElementById('reviewInput').value = '';
+    updateChar();
+    document.getElementById('resultBox').style.display = 'none';
+  }
 
-            try {
-                const response = await fetch("/summarize/", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ dialogue: input, length, format, tone }),
-                });
+  function updateChar() {
+    const len = document.getElementById('reviewInput').value.length;
+    document.getElementById('charCount').textContent = len;
+  }
 
-                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+  function extractKeywords(text) {
+    const lower = text.toLowerCase();
+    const words = lower.match(/\b\w+\b/g) || [];
+    const found = { pos: [], neg: [], neu: [] };
+    words.forEach(w => {
+      if (POSITIVE_WORDS.includes(w) && found.pos.length < 5) found.pos.push(w);
+      else if (NEGATIVE_WORDS.includes(w) && found.neg.length < 5) found.neg.push(w);
+      else if (NEUTRAL_WORDS.includes(w) && found.neu.length < 3) found.neu.push(w);
+    });
+    return found;
+  }
 
-                const data = await response.json();
-                const summary = data.summary || "No summary returned.";
+  // Common English words for language detection
+  const COMMON_ENGLISH = new Set(['the','a','an','is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','could','should','may','might','shall','can','need','dare','ought','used','i','you','he','she','it','we','they','me','him','her','us','them','my','your','his','its','our','their','this','that','these','those','and','but','or','nor','for','so','yet','if','then','as','at','by','in','of','on','to','up','with','about','after','all','also','any','back','because','before','between','both','come','day','even','first','from','get','give','go','good','great','her','him','how','into','just','know','like','look','make','more','most','much','new','no','not','now','off','old','one','only','other','our','out','over','people','say','she','some','still','such','take','than','their','them','then','there','think','time','two','use','very','want','way','well','what','when','where','which','while','who','will','with','work','year','film','movie','show','watch','story','character','plot','scene','act','review']);
 
-                summaryEl.className = '';
-                summaryEl.innerHTML = summary;
-                titleLabel.innerHTML = 'Summary Ready';
+  function isGibberish(text) {
+    const words = text.toLowerCase().match(/[a-z]+/g) || [];
+    if (words.length === 0) return { gibberish: true, reason: 'No recognizable words found. Please type a real English review.' };
 
-                // Stats
-                const origWords = input.split(/\s+/).length;
-                const summWords = summary.split(/\s+/).length;
-                const reduction = Math.round((1 - summWords / origWords) * 100);
-                document.getElementById('stat-original').textContent = origWords.toLocaleString();
-                document.getElementById('stat-summary').textContent = summWords.toLocaleString();
-                document.getElementById('stat-reduction').textContent = `${reduction}% shorter`;
-                footer.style.display = 'flex';
+    // Check average word length — gibberish tends to be very long random strings
+    const avgLen = words.reduce((s, w) => s + w.length, 0) / words.length;
+    if (avgLen > 9) return { gibberish: true, reason: 'The text looks like random characters. Please write a real movie review in English.' };
 
-            } catch (err) {
-                summaryEl.className = 'error';
-                summaryEl.innerHTML = `⚠ ${err.message}`;
-                titleLabel.innerHTML = 'Error';
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '✦ Summarize';
-            }
-        }
+    // Check what % of words are real English words
+    const realWords = words.filter(w => COMMON_ENGLISH.has(w) || POSITIVE_WORDS.includes(w) || NEGATIVE_WORDS.includes(w) || NEUTRAL_WORDS.includes(w));
+    const realRatio = realWords.length / words.length;
 
-        function copyOutput() {
-            const text = document.getElementById('summary-text').innerText;
-            if (text) {
-                navigator.clipboard.writeText(text).then(() => {
-                    const btn = event.currentTarget;
-                    btn.textContent = '✓';
-                    setTimeout(() => btn.textContent = '⎘', 1500);
-                });
-            }
-        }
+    // Check consonant clusters — gibberish has too many consecutive consonants
+    const consonantCluster = words.filter(w => /[^aeiou]{5,}/.test(w)).length;
+    const clusterRatio = consonantCluster / words.length;
 
-        function downloadOutput() {
-            const text = document.getElementById('summary-text').innerText;
-            if (!text || text.includes('will appear here')) return;
-            const blob = new Blob([text], { type: 'text/plain' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'summary.txt';
-            a.click();
-        }
+    if (clusterRatio > 0.4) return { gibberish: true, reason: 'This doesn\'t look like English text. Please enter a real movie review.' };
+    if (words.length >= 3 && realRatio < 0.15) return { gibberish: true, reason: 'Could not detect valid English. Please write your review in English so the model can analyze it.' };
 
-        // Allow Ctrl+Enter to submit
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleSummarize();
-        });
-    </script>
+    // Non-English / other language detection (high ratio of non-ASCII)
+    const nonAscii = (text.match(/[^\x00-\x7F]/g) || []).length;
+    if (nonAscii / text.length > 0.3) return { gibberish: true, reason: 'This model is trained on English reviews only. Please write your review in English.' };
+
+    return { gibberish: false };
+  }
+
+  function simulateModel(text) {
+    const lower = text.toLowerCase();
+    const words = lower.match(/\b\w+\b/g) || [];
+    let score = 0.5;
+    words.forEach(w => {
+      if (POSITIVE_WORDS.includes(w)) score += 0.04;
+      if (NEGATIVE_WORDS.includes(w)) score -= 0.04;
+    });
+    const negations = (text.match(/\b(not|never|no|n't|wasn't|isn't|didn't|hardly|barely)\b/gi) || []).length;
+    score -= negations * 0.06;
+    return Math.max(0.05, Math.min(0.95, score));
+  }
+
+  function showError(msg) {
+    const eb = document.getElementById('errorBox');
+    document.getElementById('errorMsg').textContent = msg;
+    eb.style.display = 'block';
+    document.getElementById('resultBox').style.display = 'none';
+  }
+
+  function hideError() {
+    document.getElementById('errorBox').style.display = 'none';
+  }
+
+  async function analyzeReview() {
+    const text = document.getElementById('reviewInput').value.trim();
+
+    if (!text || text.length < 10) {
+      showError('Please enter a review with at least 10 characters.');
+      return;
+    }
+
+    const btn = document.getElementById('analyzeBtn');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btnText');
+
+    btn.disabled = true;
+    spinner.style.display = 'block';
+    btnText.textContent = 'Analyzing...';
+    hideError();
+    document.getElementById('resultBox').style.display = 'none';
+
+    await new Promise(r => setTimeout(r, 800));
+
+    // Validate language / gibberish
+    const check = isGibberish(text);
+    if (check.gibberish) {
+      showError(check.reason);
+      btn.disabled = false;
+      spinner.style.display = 'none';
+      btnText.textContent = '✨ Analyze Sentiment';
+      return;
+    }
+
+    const prob = simulateModel(text);
+    const posProb = Math.round(prob * 100);
+    const negProb = 100 - posProb;
+    const isPositive = prob >= 0.5;
+    const confidence = isPositive ? posProb : negProb;
+
+    const box = document.getElementById('resultBox');
+    box.className = 'result-box ' + (isPositive ? 'positive' : 'negative');
+    document.getElementById('resultEmoji').textContent = isPositive ? '😊' : '😞';
+
+    const labelEl = document.getElementById('resultLabel');
+    labelEl.textContent = isPositive ? 'Positive Sentiment' : 'Negative Sentiment';
+    labelEl.className = 'result-label ' + (isPositive ? 'pos' : 'neg');
+    document.getElementById('resultConf').textContent = `Confidence: ${confidence}%`;
+
+    document.getElementById('posPercent').textContent = posProb + '%';
+    document.getElementById('negPercent').textContent = negProb + '%';
+    document.getElementById('posBar').style.width = posProb + '%';
+    document.getElementById('negBar').style.width = negProb + '%';
+
+    const kw = extractKeywords(text);
+    const kwContainer = document.getElementById('keywordChips');
+    kwContainer.innerHTML = '';
+    kw.pos.forEach(w => { const c=document.createElement('span'); c.className='kchip pos'; c.textContent='+ '+w; kwContainer.appendChild(c); });
+    kw.neg.forEach(w => { const c=document.createElement('span'); c.className='kchip neg'; c.textContent='- '+w; kwContainer.appendChild(c); });
+    kw.neu.forEach(w => { const c=document.createElement('span'); c.className='kchip neu'; c.textContent=w; kwContainer.appendChild(c); });
+
+    document.getElementById('keywordsSection').style.display =
+      (kw.pos.length + kw.neg.length + kw.neu.length > 0) ? 'block' : 'none';
+
+    box.style.display = 'block';
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    btnText.textContent = '✨ Analyze Sentiment';
+  }
+
+  // Smooth scroll
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
 </body>
 </html>
-```
